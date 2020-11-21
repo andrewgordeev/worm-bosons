@@ -2,7 +2,7 @@
 
 This is our class project, where we realize that all bosons are actually just fermions.
 
-The program in main.cpp can be compiled and run on its own using the command
+The program in main.cpp can be compiled using the command
 
 ```
 g++ -O3 -o main main.cpp
