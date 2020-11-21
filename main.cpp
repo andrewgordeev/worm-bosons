@@ -1,6 +1,5 @@
 #include <cmath>
 #include <ctime>
-#include <iomanip>
 #include <iostream>
 #include <random>
 #include <stdexcept>
@@ -146,11 +145,12 @@ EstErr estimate(std::vector<double> data, double prec = 0.05) {
 	double var = variance(data.data(), data.size());
 	std::size_t chunk_n = 1;
 	// Chunk until correlation has vanished.
-	while (std::abs(correlation(data.data(), data.size(), 1)) > prec * var) {
+	std::cout << correlation(data.data(), data.size(), 1) << ", " << var << std::endl;
+	while (correlation(data.data(), data.size(), 1) >= prec * var) {
 		data = chunks(data.data(), data.size(), 2);
 		chunk_n *= 2;
-		if (data.size() <= 1) {
-			throw std::runtime_error("Not enough data to estimate observables");
+		if (data.empty()) {
+			std::cout << "Not enough data to estimate observables" << std::endl;
 		}
 	}
 	// Return mean and variance of chunks.
@@ -299,11 +299,10 @@ int main(int argc, char** argv) {
 	double beta = std::stod(argv[6]);    // Imaginary time.
 	double T = std::stod(argv[7]);       // Hopping constant.
 	// Number of time steps.
-	unsigned K = static_cast<unsigned>(std::round(std::abs(beta) / std::abs(epsilon)));
+	unsigned K = static_cast<unsigned>(std::ceil(std::abs(beta) / std::abs(epsilon)));
 	if (K <= 2) {
 		K = 3;
 	}
-	epsilon = beta / K;
 	// Initialize lattice.
 	Lattice lattice(N, K);
 	// Random number engine.
@@ -328,7 +327,7 @@ int main(int argc, char** argv) {
 	std::cout << "Burning" << std::endl;
 	for (unsigned idx = 0; idx < event_count + burn_count; ++idx) {
 		if (idx >= burn_count && (idx - burn_count) % (event_count / 100) == 0) {
-			std::cout << "Produced " << static_cast<int>(100 * static_cast<double>(idx - burn_count) / event_count) << "%\r";
+			std::cout << "Produced " << 100 * static_cast<double>(idx - burn_count) / event_count << "%\r";
 			std::cout.flush();
 		}
 		if (LOG_PROCESS || LOG_STATE || LOG_OBSERVABLES) {
@@ -683,7 +682,6 @@ int main(int argc, char** argv) {
 	EstErr est_susceptibility = estimate(susceptibilities);
 
 	std::cout << std::endl;
-	std::cout << std::scientific << std::setprecision(17);
 	std::cout << "Chunk sizes: " << est_energy.chunk_n << ", " << est_number.chunk_n << ", " << est_susceptibility.chunk_n << std::endl;
 	std::cout << "Energy: " << est_energy.est << " ± " << est_energy.err << std::endl;
 	std::cout << "Number: " << est_number.est << " ± " << est_number.err << std::endl;
